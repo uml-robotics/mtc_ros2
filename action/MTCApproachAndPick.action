@@ -1,0 +1,29 @@
+# Goal
+geometry_msgs/PoseStamped approach
+geometry_msgs/PoseStamped grasp
+geometry_msgs/PoseStamped retreat
+string object_id
+
+# Optional tuning (defaults shown if omitted)
+float32 cart_step_size    # default 0.005
+float32 vel_scale         # default 0.6
+float32 acc_scale         # default 0.6
+string arm_group          # default "arm"
+string hand_group         # default "hand"
+string eef                # default "tool0"
+string ik_frame           # default "tool0"
+string open_named_state   # default "open"
+string close_named_state  # default "close"
+string pipeline_id        # default "" (OMPL); set "pilz_industrial_motion_planner" for LIN/PTP
+
+---
+# Result
+bool success
+int32 error_code          # 0 = OK
+string message
+
+---
+# Feedback
+string phase              # "planning" | "executing" | "canceling"
+string stage_name         # current stage, if executing
+float32 stage_progress    # 0..1 within current stage
