@@ -117,10 +117,10 @@ private:
     // =================== Debug Logging ================================================================================
 
     // Group (Arm/Hand) Params
-    const std::string arm_group   = goal->arm_group.empty()   ? "panda_arm"   : goal->arm_group;
-    const std::string hand_group  = goal->hand_group.empty()  ? "panda_hand"  : goal->hand_group;
-    const std::string eef         = goal->eef.empty()         ? "panda_tcp" : goal->eef;
-    const std::string ik_frame    = goal->ik_frame.empty()    ? "panda_tcp" : goal->ik_frame;
+    const std::string arm_group   = goal->arm_group.empty()   ? "arm"   : goal->arm_group;
+    const std::string hand_group  = goal->hand_group.empty()  ? "hand"  : goal->hand_group;
+    const std::string eef         = goal->eef.empty()         ? "panda_hand" : goal->eef;
+    const std::string ik_frame    = goal->ik_frame.empty()    ? "panda_hand" : goal->ik_frame;
     const std::string open_state  = goal->open_named_state.empty()  ? "open"  : goal->open_named_state;
     const std::string close_state = goal->close_named_state.empty() ? "close" : goal->close_named_state;
 

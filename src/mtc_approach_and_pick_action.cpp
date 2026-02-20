@@ -117,9 +117,9 @@ private:
     // =================== Debug Logging ================================================================================
 
     // Group (Arm/Hand) Params
-    const std::string arm_group   = goal->arm_group.empty()   ? "panda_arm"   : goal->arm_group;
-    const std::string hand_group  = goal->hand_group.empty()  ? "panda_hand"  : goal->hand_group;
-    const std::string eef         = goal->eef.empty()         ? "panda_tcp" : goal->eef;
+    const std::string arm_group   = goal->arm_group.empty()   ? "arm"   : goal->arm_group;
+    const std::string hand_group  = goal->hand_group.empty()  ? "hand"  : goal->hand_group;
+    const std::string eef         = goal->eef.empty()         ? "panda_hand" : goal->eef;
     const std::string ik_frame    = goal->ik_frame.empty()    ? "panda_tcp" : goal->ik_frame;
     const std::string open_state  = goal->open_named_state.empty()  ? "open"  : goal->open_named_state;
     const std::string close_state = goal->close_named_state.empty() ? "close" : goal->close_named_state;
@@ -137,7 +137,7 @@ private:
     task.setProperty("group", arm_group);                   // panda_arm
     task.setProperty("eef", eef);                           // panda_tcp
     task.setProperty("hand", hand_group);                   // panda_hand
-	  task.setProperty("hand_grasping_frame", hand_group);    // panda_hand <- same as hand_frame in tutorials example
+	  task.setProperty("hand_grasping_frame", ik_frame);      // panda_hand <- same as hand_frame in tutorials example
     task.setProperty("ik_frame", ik_frame);                 // panda_tcp
 
     // Solvers
@@ -146,7 +146,7 @@ private:
     auto interpolation_planner = std::make_shared<solvers::JointInterpolationPlanner>();
 
     // Specify sampling_planner params
-    sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
+    sampling_planner->setProperty("goal_joint_tolerance", 1e-2);
 
     // Specify cartesian planner params
     cartesian_planner->setMaxVelocityScalingFactor(goal->vel_scale > 0.f ? goal->vel_scale : 1.0);
