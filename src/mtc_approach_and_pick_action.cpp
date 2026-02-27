@@ -286,8 +286,8 @@ private:
         // Simple MoveTo stage to go to pregrasp pose
         {
           auto move_to_pregrasp =
-            // std::make_unique<mtc::stages::MoveTo>("move to pregrasp", cartesian_planner);
-            std::make_unique<mtc::stages::MoveTo>("move to pregrasp", sampling_planner);
+            std::make_unique<mtc::stages::MoveTo>("move to pregrasp", cartesian_planner);
+            // std::make_unique<mtc::stages::MoveTo>("move to pregrasp", sampling_planner);
           move_to_pregrasp->setGroup(arm_group);
           move_to_pregrasp->setGoal(approach_pose);  // PoseStamped overload
           grasp->insert(std::move(move_to_pregrasp));
@@ -413,15 +413,6 @@ private:
         result.success = false;
         result.error_code = 23;
         result.message = std::string("Execution threw: ") + what;
-        finish_goal(1, result);
-        return;
-      }
-
-      // Wait for controller to actually run something and then go back to idle
-      if (!wait_for_busy_then_idle_( /*busy*/ 1.0, /*idle*/ 10.0 )) {
-        result.success = false;
-        result.error_code = 31;
-        result.message = "Controller did not show busy->idle cycle after execute().";
         finish_goal(1, result);
         return;
       }

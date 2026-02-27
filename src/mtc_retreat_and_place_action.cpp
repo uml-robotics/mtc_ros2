@@ -400,20 +400,20 @@ private:
         return;
       }
 
-      // Wait for controller to actually run something and then go back to idle
-      if (!wait_for_busy_then_idle_( /*busy*/ 1.0, /*idle*/ 10.0 )) {
-        result.success = false;
-        result.error_code = 31;
-        result.message = "Controller did not show busy->idle cycle after execute().";
-        finish_goal(1, result);
-        return;
-      }
-
       if (exec_ec != moveit::core::MoveItErrorCode::SUCCESS) {
-        result.success = true;
-        result.error_code = 0;
-        result.message = "Execute returned non-SUCCESS, but controller completed busy->idle; treating as success.";
-        finish_goal(0, result);
+        result.success = false;
+        result.error_code = exec_ec.val;
+
+        result.message =
+          std::string("Execution failed with MoveItErrorCode: ") +
+          std::to_string(exec_ec.val);
+
+        RCLCPP_ERROR(
+          get_logger(),
+          "Execution failed. MoveItErrorCode: %d",
+          exec_ec.val);
+
+        finish_goal(exec_ec.val, result);
         return;
       }
 
