@@ -246,9 +246,15 @@ private:
       // Specify sampling_planner params
       sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
 
-      // Specify cartesian planner params
-      cartesian_planner->setMaxVelocityScalingFactor(goal->vel_scale > 0.f ? goal->vel_scale : 1.0);
-      cartesian_planner->setMaxAccelerationScalingFactor(goal->acc_scale > 0.f ? goal->acc_scale : 1.0);
+      // Specify planner scaling params
+      const double velocity_scale = goal->vel_scale > 0.f ? goal->vel_scale : 0.1;
+      const double acceleration_scale = goal->acc_scale > 0.f ? goal->acc_scale : 0.1;
+      sampling_planner->setMaxVelocityScalingFactor(velocity_scale);
+      sampling_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+      cartesian_planner->setMaxVelocityScalingFactor(velocity_scale);
+      cartesian_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+      interpolation_planner->setMaxVelocityScalingFactor(velocity_scale);
+      interpolation_planner->setMaxAccelerationScalingFactor(acceleration_scale);
       cartesian_planner->setStepSize(goal->cart_step_size > 0.f ? goal->cart_step_size : 0.01);
 
       moveit::task_constructor::Stage* current_state_ptr = nullptr;
@@ -277,12 +283,12 @@ private:
           std::make_unique<mtc::stages::MoveRelative>("lift object", cartesian_planner);
         lift_object->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
         lift_object->setMinMaxDistance(0.1, 0.15);
-        lift_object->setIKFrame(eef);
+        lift_object->setIKFrame(ik_frame);
         lift_object->properties().set("marker_ns", "lift_object");
 
         // Set upward direction
         geometry_msgs::msg::Vector3Stamped vec;
-        vec.header.frame_id = "panda_link0";
+        vec.header.frame_id = "ur5e_base_link";
         vec.vector.z = 1.0;
         lift_object->setDirection(vec);
         task.add(std::move(lift_object));

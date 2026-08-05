@@ -249,9 +249,15 @@ private:
       // Specify sampling_planner params
       sampling_planner->setProperty("goal_joint_tolerance", 1e-2);
 
-      // Specify cartesian planner params
-      cartesian_planner->setMaxVelocityScalingFactor(goal->vel_scale > 0.f ? goal->vel_scale : 1.0);
-      cartesian_planner->setMaxAccelerationScalingFactor(goal->acc_scale > 0.f ? goal->acc_scale : 1.0);
+      // Specify planner scaling params
+      const double velocity_scale = goal->vel_scale > 0.f ? goal->vel_scale : 0.1;
+      const double acceleration_scale = goal->acc_scale > 0.f ? goal->acc_scale : 0.1;
+      sampling_planner->setMaxVelocityScalingFactor(velocity_scale);
+      sampling_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+      cartesian_planner->setMaxVelocityScalingFactor(velocity_scale);
+      cartesian_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+      interpolation_planner->setMaxVelocityScalingFactor(velocity_scale);
+      interpolation_planner->setMaxAccelerationScalingFactor(acceleration_scale);
       cartesian_planner->setStepSize(goal->cart_step_size > 0.f ? goal->cart_step_size : 0.01);
 
       moveit::task_constructor::Stage* current_state_ptr = nullptr;
@@ -286,9 +292,9 @@ private:
         // Simple MoveTo stage to go to pregrasp pose
         {
           auto move_to_pregrasp =
-            std::make_unique<mtc::stages::MoveTo>("move to pregrasp", cartesian_planner);
-            // std::make_unique<mtc::stages::MoveTo>("move to pregrasp", sampling_planner);
+            std::make_unique<mtc::stages::MoveTo>("move to pregrasp", sampling_planner);
           move_to_pregrasp->setGroup(arm_group);
+          move_to_pregrasp->setIKFrame(ik_frame);
           move_to_pregrasp->setGoal(approach_pose);  // PoseStamped overload
           grasp->insert(std::move(move_to_pregrasp));
         }
@@ -311,9 +317,10 @@ private:
         // Simple MoveTo stage to go to SRDF named target "ready"
         {
           auto move_to_grasp =
-            std::make_unique<mtc::stages::MoveTo>("move arm to grasp", sampling_planner);
+            std::make_unique<mtc::stages::MoveTo>("move arm to grasp", cartesian_planner);
           move_to_grasp->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
           move_to_grasp->setGroup(arm_group);
+          move_to_grasp->setIKFrame(ik_frame);
           move_to_grasp->setGoal(grasp_pose);
           grasp->insert(std::move(move_to_grasp));
         }
