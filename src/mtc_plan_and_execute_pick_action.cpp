@@ -149,8 +149,14 @@ private:
     sampling_planner->setProperty("goal_joint_tolerance", 1e-5);
 
     // Specify cartesian planner params
-    cartesian_planner->setMaxVelocityScalingFactor(goal->vel_scale > 0.f ? goal->vel_scale : 1.0);
-    cartesian_planner->setMaxAccelerationScalingFactor(goal->acc_scale > 0.f ? goal->acc_scale : 1.0);
+    const double velocity_scale = goal->vel_scale > 0.f ? goal->vel_scale : 0.1;
+    const double acceleration_scale = goal->acc_scale > 0.f ? goal->acc_scale : 0.1;
+    sampling_planner->setMaxVelocityScalingFactor(velocity_scale);
+    sampling_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+    cartesian_planner->setMaxVelocityScalingFactor(velocity_scale);
+    cartesian_planner->setMaxAccelerationScalingFactor(acceleration_scale);
+    interpolation_planner->setMaxVelocityScalingFactor(velocity_scale);
+    interpolation_planner->setMaxAccelerationScalingFactor(acceleration_scale);
     cartesian_planner->setStepSize(goal->cart_step_size > 0.f ? goal->cart_step_size : 0.01);
 
     moveit::task_constructor::Stage* current_state_ptr = nullptr;
@@ -200,8 +206,9 @@ private:
       // Simple MoveTo stage to go to pregrasp pose
       {
         auto move_to_pregrasp =
-          std::make_unique<mtc::stages::MoveTo>("move to pregrasp", cartesian_planner);
+          std::make_unique<mtc::stages::MoveTo>("move to pregrasp", sampling_planner);
         move_to_pregrasp->setGroup(arm_group);
+        move_to_pregrasp->setIKFrame(ik_frame);
         move_to_pregrasp->setGoal(approach_pose);  // PoseStamped overload
         grasp->insert(std::move(move_to_pregrasp));
       }
@@ -212,9 +219,10 @@ private:
       // Simple MoveTo stage to go to SRDF named target "ready"
       {
         auto move_to_grasp =
-          std::make_unique<mtc::stages::MoveTo>("move arm to ready", sampling_planner);
+          std::make_unique<mtc::stages::MoveTo>("move arm to ready", cartesian_planner);
         move_to_grasp->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
         move_to_grasp->setGroup(arm_group);
+        move_to_grasp->setIKFrame(ik_frame);
         move_to_grasp->setGoal(grasp_pose);
         grasp->insert(std::move(move_to_grasp));
       }
@@ -226,7 +234,7 @@ private:
       {
         auto stage =std::make_unique<mtc::stages::MoveTo>("close hand", sampling_planner);
         stage->setGroup(hand_group);
-        stage->setGoal("close");
+        stage->setGoal("closed");
         grasp->insert(std::move(stage));
       }
 
@@ -239,12 +247,12 @@ private:
             std::make_unique<mtc::stages::MoveRelative>("lift object", cartesian_planner);
         stage->properties().configureInitFrom(mtc::Stage::PARENT, { "group" });
         stage->setMinMaxDistance(0.1, 0.15);
-        stage->setIKFrame(eef);
+        stage->setIKFrame(ik_frame);
         stage->properties().set("marker_ns", "lift_object");
 
         // Set upward direction
         geometry_msgs::msg::Vector3Stamped vec;
-        vec.header.frame_id = "panda_link0";
+        vec.header.frame_id = "ur5e_base_link";
         vec.vector.z = 1.0;
         stage->setDirection(vec);
         grasp->insert(std::move(stage));
